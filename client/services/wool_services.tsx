@@ -1,5 +1,5 @@
 import { WoolForm } from "@/interfaces/wool_form_interface";
-import { Wool } from "@/interfaces/wool_interface";
+import { server_url } from "./url";
 
 export const existsWool = async (
   wool_color_id: number,
@@ -8,7 +8,8 @@ export const existsWool = async (
 ) => {
   try {
     const res = await fetch(
-      "http://localhost:3000/wool_verify?wool_color_id=" +
+      server_url +
+        "/wool_verify?wool_color_id=" +
         wool_color_id +
         "&wool_thickness_id=" +
         wool_thickness_id +
@@ -31,7 +32,7 @@ export const existsWool = async (
 
 export const createWool = async (woolForm: any) => {
   try {
-    const res = await fetch("http://localhost:3000/wool", {
+    const res = await fetch(server_url + "/wool", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,9 +48,8 @@ export const createWool = async (woolForm: any) => {
 };
 
 export const updateWool = async (wool: WoolForm, wool_id: number) => {
-  const url = "http://localhost:3000/wool/" + wool_id;
+  const url = server_url + "/wool/" + wool_id;
 
-  console.log(url);
   try {
     const res = await fetch(url, {
       method: "PUT",
@@ -67,7 +67,6 @@ export const updateWool = async (wool: WoolForm, wool_id: number) => {
     });
 
     const data = await res.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error(error);
@@ -75,7 +74,7 @@ export const updateWool = async (wool: WoolForm, wool_id: number) => {
 };
 
 export const deleteWool = async (wool_id: number) => {
-  const url = "http://localhost:3000/wool/" + wool_id;
+  const url = server_url + "/wool/" + wool_id;
 
   try {
     const res = await fetch(url, {

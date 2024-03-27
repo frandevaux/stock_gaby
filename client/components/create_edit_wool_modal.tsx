@@ -7,6 +7,7 @@ import {
   fetchWoolType,
   fetchWoolThickness,
   fetchWoolColor,
+  fetchStock,
 } from "@/services/fetchData";
 import {
   existsWool,
@@ -24,17 +25,20 @@ import {
   Input,
   Autocomplete,
   AutocompleteItem,
+  useDisclosure,
 } from "@nextui-org/react";
+import { on } from "events";
 import { useState, useEffect, Key, Dispatch, SetStateAction } from "react";
+import { ConfirmationModal } from "./confirmation_modal";
 
 export const WoolModal = (props: {
   isOpen: boolean;
-  onOpen: () => void;
   onOpenChange: () => void;
   wool: Wool | null;
+  setStock: Dispatch<SetStateAction<Wool[]>>;
 }) => {
-  const { isOpen, onOpen, onOpenChange, wool } = props;
-
+  const { isOpen, onOpenChange, wool, setStock } = props;
+  const confirmationModal = useDisclosure();
   const [woolType, setWoolType] = useState([]);
   const [woolThickness, setWoolThickness] = useState([]);
   const [woolColor, setWoolColor] = useState([]);
@@ -100,9 +104,9 @@ export const WoolModal = (props: {
   const handleEdit = async () => {
     // Check if the wool has changed
     if (
-      wool?.wool_color_id !== woolForm.wool_color_id ||
-      wool?.wool_thickness_id !== woolForm.wool_thickness_id ||
-      wool?.wool_type_id !== woolForm.wool_type_id
+      wool?.wool_color_id != woolForm.wool_color_id ||
+      wool?.wool_thickness_id != woolForm.wool_thickness_id ||
+      wool?.wool_type_id != woolForm.wool_type_id
     ) {
       const data = await existsWool(
         woolForm.wool_color_id,
@@ -112,7 +116,9 @@ export const WoolModal = (props: {
       if (data.rows.length > 0) {
         console.log("Ya existe");
       } else {
-        createWool(woolForm);
+        if (wool) {
+          updateWool(woolForm, wool.wool_id);
+        }
         resetForm();
       }
     } else if (wool) {
@@ -127,171 +133,186 @@ export const WoolModal = (props: {
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      className=" dark "
-      isDismissable={false}
-      hideCloseButton
-    >
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">
-              {wool ? "Editar" : "Agregar"} lana
-            </ModalHeader>
-            <ModalBody>
-              <Autocomplete
-                label="Tipo de lana"
-                items={woolType}
-                onSelectionChange={(e: Key) => {
-                  setWoolForm({
-                    ...woolForm,
-                    wool_type_id: Number(e),
-                  });
-                }}
-                className="dark text-black"
-                defaultSelectedKey={wool?.wool_type_id.toString()}
-              >
-                {(item: WoolType) => (
-                  <AutocompleteItem
-                    key={item.wool_type_id}
-                    className="dark text-black"
-                  >
-                    {item.wool_type_name}
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-
-              <Autocomplete
-                label="Grosor de lana"
-                items={woolThickness}
-                onSelectionChange={(e: Key) => {
-                  setWoolForm({
-                    ...woolForm,
-                    wool_thickness_id: Number(e),
-                  });
-                }}
-                className="dark text-black"
-                defaultSelectedKey={wool?.wool_thickness_id.toString()}
-              >
-                {(item: WoolThickness) => (
-                  <AutocompleteItem
-                    key={item.wool_thickness_id}
-                    className="dark text-black"
-                  >
-                    {item.wool_thickness_name}
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-              <Autocomplete
-                label="Color de lana"
-                items={woolColor}
-                onSelectionChange={(e: Key) => {
-                  setWoolForm({
-                    ...woolForm,
-                    wool_color_id: Number(e),
-                  });
-                }}
-                className="dark text-black"
-                defaultSelectedKey={wool?.wool_color_id.toString()}
-              >
-                {(item: WoolColor) => (
-                  <AutocompleteItem
-                    key={item.wool_color_id}
-                    className="dark text-black"
-                  >
-                    {item.wool_color_name}
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-              <div className="flex gap-3">
-                <Input
-                  type="number"
-                  label="Precio"
-                  placeholder="0.00"
-                  value={woolForm.wool_price.toString()}
-                  onValueChange={(e) => {
+    <>
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        className=" dark "
+        isDismissable={false}
+        hideCloseButton
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {wool ? "Editar" : "Agregar"} lana
+              </ModalHeader>
+              <ModalBody>
+                <Autocomplete
+                  label="Tipo de lana"
+                  items={woolType}
+                  onSelectionChange={(e: Key) => {
                     setWoolForm({
                       ...woolForm,
-                      wool_price: Number(e),
+                      wool_type_id: Number(e),
                     });
                   }}
-                  startContent={
-                    <div className="pointer-events-none flex items-center">
-                      <span className="text-default-400 text-small">$</span>
-                    </div>
-                  }
-                />
-                <Input
-                  label="Stock"
-                  type="number"
-                  value={woolForm.wool_stock.toString()}
-                  onValueChange={(e) => {
-                    setWoolForm({
-                      ...woolForm,
-                      wool_stock: Number(e),
-                    });
-                  }}
-                />
-                <Input
-                  label="Stock ideal"
-                  type="number"
-                  value={woolForm.wool_ideal_stock.toString()}
-                  onValueChange={(e) => {
-                    setWoolForm({
-                      ...woolForm,
-                      wool_ideal_stock: Number(e),
-                    });
-                  }}
-                />
-              </div>
-            </ModalBody>
-            <ModalFooter className={wool ? "justify-between" : "justify-end"}>
-              {wool && (
-                <Button
-                  color="danger"
-                  variant="light"
-                  onPress={() => {
-                    resetForm();
-                    handleDelete();
-                    onClose();
-                  }}
+                  className="dark text-black"
+                  defaultSelectedKey={wool?.wool_type_id.toString()}
                 >
-                  Eliminar lana
-                </Button>
-              )}
+                  {(item: WoolType) => (
+                    <AutocompleteItem
+                      key={item.wool_type_id}
+                      className="dark text-black"
+                    >
+                      {item.wool_type_name}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
 
-              <div className="flex gap-2">
-                <Button
-                  color="danger"
-                  variant="light"
-                  onPress={() => {
-                    resetForm();
-                    onClose();
+                <Autocomplete
+                  label="Grosor de lana"
+                  items={woolThickness}
+                  onSelectionChange={(e: Key) => {
+                    setWoolForm({
+                      ...woolForm,
+                      wool_thickness_id: Number(e),
+                    });
                   }}
+                  className="dark text-black"
+                  defaultSelectedKey={wool?.wool_thickness_id.toString()}
                 >
-                  Cerrar
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={() => {
-                    if (wool) {
-                      handleEdit();
-                      onClose();
-                    } else {
-                      handleCreate();
-                      onClose();
+                  {(item: WoolThickness) => (
+                    <AutocompleteItem
+                      key={item.wool_thickness_id}
+                      className="dark text-black"
+                    >
+                      {item.wool_thickness_name}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+                <Autocomplete
+                  label="Color de lana"
+                  items={woolColor}
+                  onSelectionChange={(e: Key) => {
+                    setWoolForm({
+                      ...woolForm,
+                      wool_color_id: Number(e),
+                    });
+                  }}
+                  className="dark text-black"
+                  defaultSelectedKey={wool?.wool_color_id.toString()}
+                >
+                  {(item: WoolColor) => (
+                    <AutocompleteItem
+                      key={item.wool_color_id}
+                      className="dark text-black"
+                    >
+                      {item.wool_color_name}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+                <div className="flex gap-3">
+                  <Input
+                    type="number"
+                    label="Precio"
+                    placeholder="0.00"
+                    value={woolForm.wool_price.toString()}
+                    onValueChange={(e) => {
+                      setWoolForm({
+                        ...woolForm,
+                        wool_price: Number(e),
+                      });
+                    }}
+                    startContent={
+                      <div className="pointer-events-none flex items-center">
+                        <span className="text-default-400 text-small">$</span>
+                      </div>
                     }
-                  }}
-                >
-                  Confirmar
-                </Button>
-              </div>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+                  />
+                  <Input
+                    label="Stock"
+                    type="number"
+                    value={woolForm.wool_stock.toString()}
+                    onValueChange={(e) => {
+                      setWoolForm({
+                        ...woolForm,
+                        wool_stock: Number(e),
+                      });
+                    }}
+                  />
+                  <Input
+                    label="Stock ideal"
+                    type="number"
+                    value={woolForm.wool_ideal_stock.toString()}
+                    onValueChange={(e) => {
+                      setWoolForm({
+                        ...woolForm,
+                        wool_ideal_stock: Number(e),
+                      });
+                    }}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter className={wool ? "justify-between" : "justify-end"}>
+                {wool && (
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      confirmationModal.onOpen();
+                      /* handleDelete().then(() => {
+                        fetchStock(setStock);
+                        resetForm();
+                        onClose();
+                      }); */
+                    }}
+                  >
+                    Eliminar lana
+                  </Button>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={() => {
+                      resetForm();
+                      onClose();
+                    }}
+                  >
+                    Cerrar
+                  </Button>
+                  <Button
+                    color="primary"
+                    onPress={() => {
+                      if (wool) {
+                        handleEdit().then(() => {
+                          fetchStock(setStock);
+                          resetForm();
+                          onClose();
+                        });
+                      } else {
+                        handleCreate().then(() => {
+                          fetchStock(setStock);
+                          resetForm();
+                          onClose();
+                        });
+                      }
+                    }}
+                  >
+                    Confirmar
+                  </Button>
+                </div>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onOpenChange={confirmationModal.onOpenChange}
+      />
+    </>
   );
 };

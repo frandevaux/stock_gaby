@@ -1,7 +1,6 @@
 "use client";
 
-import { WoolModal } from "@/components/create_edit_wool_modal";
-import { Wool } from "@/interfaces/wool_interface";
+import { useEffect, useState } from "react";
 import {
   Button,
   Table,
@@ -12,41 +11,122 @@ import {
   TableRow,
   useDisclosure,
 } from "@nextui-org/react";
-import { useEffect, useState } from "react";
+import { WoolModal } from "@/components/create_edit_wool_modal";
+import { Wool } from "@/interfaces/wool_interface";
+import { fetchStock } from "@/services/fetchData";
+import {
+  handleColorOrder,
+  handlePriceOrder,
+  handleThicknessOrder,
+  handleTypeOrder,
+  orderStockByColorName,
+  orderStockByThicknessName,
+  orderStockByTypeName,
+} from "@/utils/orderStock";
 
 export default function Home() {
-  const [stock, setStock] = useState([]);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [stock, setStock] = useState<Wool[]>([]);
+  const woolModal = useDisclosure();
   const [editingWool, setEditingWool] = useState<Wool | null>(null);
 
-  const fetchStock = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/wool");
-      const data = await res.json();
-      setStock(data);
+  useEffect(() => {
+    fetchStock(setStock);
+  }, []);
 
-      console.log("fetching stock");
-    } catch (error) {
-      console.error(error);
-    }
+  const handleEditWool = (wool: Wool) => {
+    fetchStock(setStock).then(() => {
+      setEditingWool(wool);
+      woolModal.onOpen();
+    });
   };
 
-  useEffect(() => {
-    fetchStock();
-  }, []);
+  const handleModalClose = () => {
+    fetchStock(setStock).then(() => {
+      setEditingWool(null);
+      woolModal.onOpenChange();
+    });
+  };
+
+  const [woolTypeOrderAsc, setWoolTypeOrderAsc] = useState(true);
+
+  const [woolThicknessOrderAsc, setWoolThicknessOrderAsc] = useState(true);
+
+  const [woolColorOrderAsc, setWoolColorOrderAsc] = useState(true);
+
+  const [woolPriceOrderAsc, setWoolPriceOrderAsc] = useState(true);
 
   return (
     <main className="flex h-screen flex-col items-center justify-center p-24">
-      <div className=" w-3/4 flex flex-col gap-6 items-end">
-        <Button color="primary" className="w-1/4" onPress={onOpen}>
+      <div className="w-3/4 flex flex-col gap-6 items-end">
+        <Button color="primary" className="w-1/4" onPress={woolModal.onOpen}>
           Agregar lana
         </Button>
-        <Table aria-label="Example static collection table">
+        <Table aria-label="Tabla de lanas">
           <TableHeader>
-            <TableColumn>TIPO</TableColumn>
-            <TableColumn>GROSOR</TableColumn>
-            <TableColumn>COLOR</TableColumn>
-            <TableColumn>PRECIO</TableColumn>
+            <TableColumn className="p-0">
+              <Button
+                onPress={() => {
+                  handleTypeOrder({
+                    woolTypeOrderAsc,
+                    setWoolTypeOrderAsc,
+                    stock,
+                    setStock,
+                  });
+                }}
+                variant="light"
+                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
+              >
+                TIPO
+              </Button>
+            </TableColumn>
+            <TableColumn className="p-0">
+              <Button
+                onPress={() => {
+                  handleThicknessOrder({
+                    woolThicknessOrderAsc,
+                    setWoolThicknessOrderAsc,
+                    stock,
+                    setStock,
+                  });
+                }}
+                variant="light"
+                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
+              >
+                GROSOR
+              </Button>
+            </TableColumn>
+            <TableColumn className="p-0">
+              <Button
+                onPress={() => {
+                  handleColorOrder({
+                    woolColorOrderAsc,
+                    setWoolColorOrderAsc,
+                    stock,
+                    setStock,
+                  });
+                }}
+                variant="light"
+                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
+              >
+                COLOR
+              </Button>
+            </TableColumn>
+            <TableColumn className="p-0">
+              <Button
+                onPress={() => {
+                  handlePriceOrder({
+                    woolPriceOrderAsc,
+                    setWoolPriceOrderAsc,
+                    stock,
+                    setStock,
+                  });
+                }}
+                variant="light"
+                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
+              >
+                PRECIO
+              </Button>
+            </TableColumn>
             <TableColumn>STOCK</TableColumn>
             <TableColumn width="10%">EDITAR</TableColumn>
           </TableHeader>
@@ -64,14 +144,7 @@ export default function Home() {
                   {wool.wool_stock + "/" + wool.wool_ideal_stock}
                 </TableCell>
                 <TableCell className="gap-3 flex">
-                  <Button
-                    color="default"
-                    onPress={() => {
-                      fetchStock();
-                      setEditingWool(wool);
-                      onOpen();
-                    }}
-                  >
+                  <Button color="default" onPress={() => handleEditWool(wool)}>
                     Editar
                   </Button>
                 </TableCell>
@@ -81,14 +154,10 @@ export default function Home() {
         </Table>
       </div>
       <WoolModal
-        isOpen={isOpen}
-        onOpen={onOpen}
-        onOpenChange={() => {
-          setEditingWool(null);
-          onOpenChange();
-          fetchStock();
-        }}
+        isOpen={woolModal.isOpen}
+        onOpenChange={handleModalClose}
         wool={editingWool}
+        setStock={setStock}
       />
     </main>
   );
