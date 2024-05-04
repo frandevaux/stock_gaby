@@ -195,14 +195,14 @@ export const WoolModal = (props: {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        className=" dark "
         isDismissable={false}
         hideCloseButton
+        className="py-3"
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1 text-stone-800">
                 {wool ? "Editar" : "Agregar"} lana
               </ModalHeader>
               <ModalBody>
@@ -215,7 +215,7 @@ export const WoolModal = (props: {
                       wool_type_id: Number(e),
                     });
                   }}
-                  className="dark text-black"
+                  className="text-black"
                   isInvalid={isTypeInvalid}
                   variant={isTypeInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_type_id.toString()}
@@ -223,7 +223,7 @@ export const WoolModal = (props: {
                   {(item: WoolType) => (
                     <AutocompleteItem
                       key={item.wool_type_id}
-                      className="dark text-black"
+                      className="text-black"
                     >
                       {item.wool_type_name}
                     </AutocompleteItem>
@@ -239,7 +239,7 @@ export const WoolModal = (props: {
                       wool_thickness_id: Number(e),
                     });
                   }}
-                  className="dark text-black"
+                  className="text-black"
                   isInvalid={isThicknessInvalid}
                   variant={isThicknessInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_thickness_id.toString()}
@@ -247,7 +247,7 @@ export const WoolModal = (props: {
                   {(item: WoolThickness) => (
                     <AutocompleteItem
                       key={item.wool_thickness_id}
-                      className="dark text-black"
+                      className="text-black"
                     >
                       {item.wool_thickness_name}
                     </AutocompleteItem>
@@ -262,7 +262,7 @@ export const WoolModal = (props: {
                       wool_color_id: Number(e),
                     });
                   }}
-                  className="dark text-black"
+                  className="text-black"
                   isInvalid={isColorInvalid}
                   variant={isColorInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_color_id.toString()}
@@ -270,13 +270,13 @@ export const WoolModal = (props: {
                   {(item: WoolColor) => (
                     <AutocompleteItem
                       key={item.wool_color_id}
-                      className="dark text-black"
+                      className=" text-black"
                     >
                       {item.wool_color_name}
                     </AutocompleteItem>
                   )}
                 </Autocomplete>
-                <div className="flex gap-3">
+                <div className="flex gap-3 text-stone-800  ">
                   <Input
                     type="number"
                     label="Precio"

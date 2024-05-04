@@ -12,10 +12,10 @@ export const TableRows = (props: {
       className={
         wool.wool_stock <= wool.wool_ideal_stock / 4
           ? "text-red-400       "
-          : ""
+          : "text-black"
       }
     >
-      <TableCell>{wool.wool_type_name}</TableCell>
+      <TableCell className="text-black ">{wool.wool_type_name}</TableCell>
       <TableCell>{wool.wool_thickness_name}</TableCell>
       <TableCell>{wool.wool_color_name}</TableCell>
       <TableCell className="flex gap-1">

@@ -139,14 +139,14 @@ export const WoolDetailsModal = (props: {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        className=" dark "
         isDismissable={false}
         hideCloseButton
+        className="py-3"
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1 text-stone-800">
                 {modalOption === ModalOptions.WOOL_TYPE
                   ? "Crear tipo de lana"
                   : modalOption === ModalOptions.WOOL_THICKNESS

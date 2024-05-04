@@ -63,14 +63,13 @@ export const DeleteWoolModal = (props: {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        className=" dark "
         isDismissable={false}
         hideCloseButton
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1 text-stone-800">
                 Eliminar lana
               </ModalHeader>
               <ModalBody>
@@ -80,14 +79,14 @@ export const DeleteWoolModal = (props: {
                   onSelectionChange={(e: Key) => {
                     setSelectedTypeId(Number(e));
                   }}
-                  className="dark text-black"
+                  className="text-black"
                   isInvalid={isInvalid}
                   variant={isInvalid ? "bordered" : undefined}
                 >
                   {(item: WoolType) => (
                     <AutocompleteItem
                       key={item.wool_type_id}
-                      className="dark text-black"
+                      className="text-black"
                     >
                       {item.wool_type_name}
                     </AutocompleteItem>
@@ -100,14 +99,14 @@ export const DeleteWoolModal = (props: {
                   onSelectionChange={(e: Key) => {
                     setSelectedThicknessId(Number(e));
                   }}
-                  className="dark text-black"
+                  className=" text-black"
                   isInvalid={isInvalid}
                   variant={isInvalid ? "bordered" : undefined}
                 >
                   {(item: WoolThickness) => (
                     <AutocompleteItem
                       key={item.wool_thickness_id}
-                      className="dark text-black"
+                      className=" text-black"
                     >
                       {item.wool_thickness_name}
                     </AutocompleteItem>
@@ -119,14 +118,14 @@ export const DeleteWoolModal = (props: {
                   onSelectionChange={(e: Key) => {
                     setSelectedColorId(Number(e));
                   }}
-                  className="dark text-black"
+                  className="text-black"
                   isInvalid={isInvalid}
                   variant={isInvalid ? "bordered" : undefined}
                 >
                   {(item: WoolColor) => (
                     <AutocompleteItem
                       key={item.wool_color_id}
-                      className="dark text-black"
+                      className="text-black"
                     >
                       {item.wool_color_name}
                     </AutocompleteItem>

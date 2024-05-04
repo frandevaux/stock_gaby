@@ -1,10 +1,11 @@
 "use client";
 
-import { Key, useEffect, useState } from "react";
+import { Key, useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
   AutocompleteItem,
   Button,
+  Pagination,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -54,12 +55,24 @@ export default function Home() {
   const deleteDetailsModal = useDisclosure();
   const deleteWoolModal = useDisclosure();
   const [editingWool, setEditingWool] = useState<Wool | null>(null);
+  const [pages, setPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 8;
+
+  const paginatedStock = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredStock.slice(start, end);
+  }, [page, filteredStock]);
 
   useEffect(() => {
     fetchStock(setStock);
   }, []);
+
   useEffect(() => {
     setFilteredStock(stock);
+    setPages(Math.ceil(stock.length / rowsPerPage));
   }, [stock]);
 
   const handleEditWool = (wool: Wool) => {
@@ -109,22 +122,15 @@ export default function Home() {
     color: null,
   });
 
-  const resetWoolFilters = () => {
-    setWoolFilters({
-      type: null,
-      thickness: null,
-      color: null,
-    });
-  };
   return (
-    <main className="flex h-screen flex-col items-center justify-center p-24">
+    <main className="flex h-screen flex-col items-center justify-center p-24 bg-white">
       <div className="w-11/12  flex flex-col gap-6 items-end">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center w-full">
           <div className="flex gap-2 w-2/3  ">
             <Autocomplete
               label="Tipo de lana"
               defaultItems={woolType}
-              className="dark text-black"
+              className="text-black"
               onSelectionChange={(e: Key) => {
                 const filterId = e ? Number(e) : null;
                 const newFilters = {
@@ -135,9 +141,9 @@ export default function Home() {
                   ...woolFilters,
                   type: filterId,
                 });
-                console.log(newFilters);
-
-                setFilteredStock(filterStock(stock, newFilters));
+                const newStock = filterStock(stock, newFilters);
+                setFilteredStock(newStock);
+                setPages(Math.ceil(newStock.length / rowsPerPage));
               }}
               defaultSelectedKey={
                 woolFilters.type ? woolFilters.type : undefined
@@ -146,7 +152,7 @@ export default function Home() {
               {(item: WoolType) => (
                 <AutocompleteItem
                   key={item.wool_type_id}
-                  className="dark text-black"
+                  className="text-black"
                 >
                   {item.wool_type_name}
                 </AutocompleteItem>
@@ -156,7 +162,7 @@ export default function Home() {
             <Autocomplete
               label="Grosor de lana"
               defaultItems={woolThickness}
-              className="dark text-black"
+              className="text-black"
               onSelectionChange={(e: Key) => {
                 const filterId = e ? Number(e) : null;
                 const newFilters = {
@@ -167,9 +173,9 @@ export default function Home() {
                   ...woolFilters,
                   thickness: filterId,
                 });
-                console.log(newFilters);
-
-                setFilteredStock(filterStock(stock, newFilters));
+                const newStock = filterStock(stock, newFilters);
+                setFilteredStock(newStock);
+                setPages(Math.ceil(newStock.length / rowsPerPage));
               }}
               defaultSelectedKey={
                 woolFilters.thickness
@@ -180,7 +186,7 @@ export default function Home() {
               {(item: WoolThickness) => (
                 <AutocompleteItem
                   key={item.wool_thickness_id}
-                  className="dark text-black"
+                  className="text-black"
                 >
                   {item.wool_thickness_name}
                 </AutocompleteItem>
@@ -189,7 +195,7 @@ export default function Home() {
             <Autocomplete
               label="Color de lana"
               defaultItems={woolColor}
-              className="dark text-black"
+              className="text-black"
               onSelectionChange={(e: Key) => {
                 const filterId = e ? Number(e) : null;
                 const newFilters = {
@@ -200,9 +206,9 @@ export default function Home() {
                   ...woolFilters,
                   color: filterId,
                 });
-                console.log(newFilters);
-
-                setFilteredStock(filterStock(stock, newFilters));
+                const newStock = filterStock(stock, newFilters);
+                setFilteredStock(newStock);
+                setPages(Math.ceil(newStock.length / rowsPerPage));
               }}
               defaultSelectedKey={
                 woolFilters.color ? woolFilters.color.toString() : undefined
@@ -211,7 +217,7 @@ export default function Home() {
               {(item: WoolColor) => (
                 <AutocompleteItem
                   key={item.wool_color_id}
-                  className="dark text-black"
+                  className="text-black"
                 >
                   {item.wool_color_name}
                 </AutocompleteItem>
@@ -231,7 +237,7 @@ export default function Home() {
               <PopoverTrigger>
                 <Button color="primary">Crear</Button>
               </PopoverTrigger>
-              <PopoverContent className="dark flex gap-2">
+              <PopoverContent className="flex gap-2 py-3">
                 <Button
                   className="w-full"
                   onPress={() => {
@@ -271,10 +277,10 @@ export default function Home() {
             >
               <PopoverTrigger>
                 <Button className="bg-red-600" isIconOnly>
-                  <FaTrashCan />
+                  <FaTrashCan color="white" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="dark flex gap-2">
+              <PopoverContent className="flex gap-2 py-3 ">
                 <Button
                   className="w-full"
                   onPress={() => {
@@ -319,83 +325,37 @@ export default function Home() {
           </div>
         </div>
 
-        <Table aria-label="Tabla de lanas">
+        <Table
+          aria-label="Tabla de lanas"
+          bottomContent={
+            <div className="flex w-full justify-center">
+              <Pagination
+                isCompact
+                showControls
+                showShadow
+                page={page}
+                total={pages}
+                onChange={(page) => setPage(page)}
+              />
+            </div>
+          }
+        >
           <TableHeader>
-            <TableColumn className="p-0">
-              <Button
-                onPress={() => {
-                  handleTypeOrder({
-                    woolTypeOrderAsc,
-                    setWoolTypeOrderAsc,
-                    stock: filteredStock,
-                    setStock: setFilteredStock,
-                  });
-                }}
-                variant="light"
-                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
-              >
-                TIPO
-              </Button>
-            </TableColumn>
-            <TableColumn className="p-0">
-              <Button
-                onPress={() => {
-                  handleThicknessOrder({
-                    woolThicknessOrderAsc,
-                    setWoolThicknessOrderAsc,
-                    stock: filteredStock,
-                    setStock: setFilteredStock,
-                  });
-                }}
-                variant="light"
-                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
-              >
-                GROSOR
-              </Button>
-            </TableColumn>
-            <TableColumn className="p-0">
-              <Button
-                onPress={() => {
-                  handleColorOrder({
-                    woolColorOrderAsc,
-                    setWoolColorOrderAsc,
-                    stock: filteredStock,
-                    setStock: setFilteredStock,
-                  });
-                }}
-                variant="light"
-                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
-              >
-                COLOR
-              </Button>
-            </TableColumn>
-            <TableColumn className="p-0">
-              <Button
-                onPress={() => {
-                  handlePriceOrder({
-                    woolPriceOrderAsc,
-                    setWoolPriceOrderAsc,
-                    stock: filteredStock,
-                    setStock: setFilteredStock,
-                  });
-                }}
-                variant="light"
-                className="text-xs text-gray-400 font-bold w-full justify-start pl-3"
-              >
-                PRECIO
-              </Button>
-            </TableColumn>
+            <TableColumn>TIPO</TableColumn>
+            <TableColumn>GROSOR</TableColumn>
+            <TableColumn>COLOR</TableColumn>
+            <TableColumn>PRECIO</TableColumn>
             <TableColumn>STOCK</TableColumn>
             <TableColumn width="10%">EDITAR</TableColumn>
           </TableHeader>
           <TableBody emptyContent={"No hay filas para mostrar"}>
-            {filteredStock.map((wool: Wool) => (
+            {paginatedStock.map((wool: Wool) => (
               <TableRow
                 key={wool.wool_id}
                 className={
                   wool.wool_stock <= wool.wool_ideal_stock / 4
                     ? "text-red-400       "
-                    : ""
+                    : "text-stone-600  "
                 }
               >
                 <TableCell>{wool.wool_type_name}</TableCell>
@@ -420,7 +380,7 @@ export default function Home() {
                   <Button
                     className={
                       wool.wool_stock <= wool.wool_ideal_stock / 4
-                        ? "bg-red-600   "
+                        ? "bg-red-600  text-white    "
                         : ""
                     }
                     color="default"

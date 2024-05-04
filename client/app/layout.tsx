@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <main className="dark container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+          <main className="light ">
             <ToastContainer
               position="top-right"
               autoClose={5000}
@@ -34,7 +34,6 @@ export default function RootLayout({
               pauseOnFocusLoss
               draggable
               pauseOnHover
-              theme="light"
             />
             {children}
           </main>

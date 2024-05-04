@@ -89,14 +89,14 @@ export const DeleteWoolDetailModal = (props: {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        className=" dark "
         isDismissable={false}
         hideCloseButton
+        className="py-3"
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
+              <ModalHeader className="flex flex-col gap-1 text-stone-800">
                 {modalOption === ModalOptions.WOOL_TYPE
                   ? "Eliminar tipo de lana"
                   : modalOption === ModalOptions.WOOL_THICKNESS
@@ -119,7 +119,7 @@ export const DeleteWoolDetailModal = (props: {
                       ? woolThickness
                       : woolColor
                   }
-                  className="dark text-black"
+                  className="text-black"
                   onSelectionChange={(e) => {
                     if (modalOption === ModalOptions.WOOL_TYPE) {
                       setSelectedTypeId(Number(e));
@@ -139,7 +139,7 @@ export const DeleteWoolDetailModal = (props: {
                           ? (item as WoolThickness).wool_thickness_id
                           : (item as WoolColor).wool_color_id
                       }
-                      className="dark text-black"
+                      className="text-black"
                     >
                       {modalOption === ModalOptions.WOOL_TYPE
                         ? (item as WoolType).wool_type_name
