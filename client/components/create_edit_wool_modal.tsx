@@ -8,7 +8,7 @@ import {
   fetchWoolThickness,
   fetchWoolColor,
   fetchStock,
-} from "@/services/fetchData";
+} from "@/services/fetch_data";
 import {
   existsWool,
   createWool,
@@ -27,21 +27,36 @@ import {
   AutocompleteItem,
   useDisclosure,
 } from "@nextui-org/react";
-import { on } from "events";
+
 import { useState, useEffect, Key, Dispatch, SetStateAction } from "react";
-import { ConfirmationModal } from "./confirmation_modal";
+import { toast } from "react-toastify";
 
 export const WoolModal = (props: {
   isOpen: boolean;
   onOpenChange: () => void;
   wool: Wool | null;
+  setEditingWool: Dispatch<SetStateAction<Wool | null>>;
   setStock: Dispatch<SetStateAction<Wool[]>>;
+  setWoolType: Dispatch<SetStateAction<never[]>>;
+  setWoolThickness: Dispatch<SetStateAction<never[]>>;
+  setWoolColor: Dispatch<SetStateAction<never[]>>;
+  woolType: WoolType[];
+  woolThickness: WoolThickness[];
+  woolColor: WoolColor[];
 }) => {
-  const { isOpen, onOpenChange, wool, setStock } = props;
-  const confirmationModal = useDisclosure();
-  const [woolType, setWoolType] = useState([]);
-  const [woolThickness, setWoolThickness] = useState([]);
-  const [woolColor, setWoolColor] = useState([]);
+  const {
+    isOpen,
+    onOpenChange,
+    wool,
+    setEditingWool,
+    setStock,
+    setWoolType,
+    setWoolThickness,
+    setWoolColor,
+    woolType,
+    woolThickness,
+    woolColor,
+  } = props;
 
   useEffect(() => {
     const handleSelected = () => {
@@ -56,9 +71,6 @@ export const WoolModal = (props: {
         });
     };
 
-    fetchWoolType(setWoolType);
-    fetchWoolThickness(setWoolThickness);
-    fetchWoolColor(setWoolColor);
     handleSelected();
   }, [wool]);
 
@@ -66,71 +78,117 @@ export const WoolModal = (props: {
     fetchWoolType(setWoolType);
     fetchWoolThickness(setWoolThickness);
     fetchWoolColor(setWoolColor);
-  }, []);
+  }, [setWoolColor, setWoolThickness, setWoolType]);
+
   const [woolForm, setWoolForm] = useState<WoolForm>({
-    wool_type_id: 0,
-    wool_thickness_id: 0,
-    wool_color_id: 0,
-    wool_price: 0,
-    wool_stock: 0,
-    wool_ideal_stock: 0,
+    wool_type_id: null,
+    wool_thickness_id: null,
+    wool_color_id: null,
+    wool_price: null,
+    wool_stock: null,
+    wool_ideal_stock: null,
   });
 
   const resetForm = () => {
     setWoolForm({
-      wool_type_id: 0,
-      wool_thickness_id: 0,
-      wool_color_id: 0,
-      wool_price: 0,
-      wool_stock: 0,
-      wool_ideal_stock: 0,
+      wool_type_id: null,
+      wool_thickness_id: null,
+      wool_color_id: null,
+      wool_price: null,
+      wool_stock: null,
+      wool_ideal_stock: null,
     });
   };
 
   const handleCreate = async () => {
-    const data = await existsWool(
-      woolForm.wool_color_id,
-      woolForm.wool_thickness_id,
-      woolForm.wool_type_id
-    );
-    if (data.rows.length > 0) {
-      console.log("Ya existe");
-    } else {
-      createWool(woolForm);
-      resetForm();
-    }
+    return new Promise<boolean>(async (resolve) => {
+      const data = await existsWool(
+        woolForm.wool_color_id !== null ? woolForm.wool_color_id : 0,
+        woolForm.wool_thickness_id !== null ? woolForm.wool_thickness_id : 0,
+        woolForm.wool_type_id !== null ? woolForm.wool_type_id : 0
+      );
+      if (data.rows.length > 0) {
+        resolve(false);
+      } else {
+        createWool(woolForm).then(() => {
+          resetForm();
+        });
+        resolve(true);
+      }
+    });
   };
 
   const handleEdit = async () => {
-    // Check if the wool has changed
-    if (
-      wool?.wool_color_id != woolForm.wool_color_id ||
-      wool?.wool_thickness_id != woolForm.wool_thickness_id ||
-      wool?.wool_type_id != woolForm.wool_type_id
-    ) {
-      const data = await existsWool(
-        woolForm.wool_color_id,
-        woolForm.wool_thickness_id,
-        woolForm.wool_type_id
-      );
-      if (data.rows.length > 0) {
-        console.log("Ya existe");
-      } else {
-        if (wool) {
-          updateWool(woolForm, wool.wool_id);
+    return new Promise<boolean>(async (resolve) => {
+      if (
+        wool?.wool_color_id != woolForm.wool_color_id ||
+        wool?.wool_thickness_id != woolForm.wool_thickness_id ||
+        wool?.wool_type_id != woolForm.wool_type_id
+      ) {
+        const data = await existsWool(
+          woolForm.wool_color_id !== null ? woolForm.wool_color_id : 0,
+          woolForm.wool_thickness_id !== null ? woolForm.wool_thickness_id : 0,
+          woolForm.wool_type_id !== null ? woolForm.wool_type_id : 0
+        );
+        if (data.rows.length > 0) {
+          resolve(false);
+        } else {
+          if (wool) {
+            resetForm();
+            updateWool(woolForm, wool.wool_id).then(() => {
+              resolve(true);
+            });
+          }
         }
+      } else if (wool) {
         resetForm();
+        updateWool(woolForm, wool.wool_id).then(() => {
+          resolve(true);
+        });
+      } else {
+        resolve(false);
       }
-    } else if (wool) {
-      console.log(woolForm);
-      updateWool(woolForm, wool.wool_id);
-      resetForm();
-    }
+    });
   };
 
   const handleDelete = async () => {
-    if (wool) deleteWool(wool.wool_id);
+    return new Promise<boolean>((resolve) => {
+      if (wool)
+        deleteWool(wool.wool_id).then(() => {
+          resolve(true);
+        });
+      else {
+        resolve(false);
+      }
+    });
   };
+
+  const resetInvalids = () => {
+    setIsTypeInvalid(false);
+    setIsColorInvalid(false);
+    setIsThicknessInvalid(false);
+    setIsPriceInvalid(false);
+    setIsStockInvalid(false);
+    setIsIdealStockInvalid(false);
+  };
+
+  const isFormComplete = () => {
+    return (
+      woolForm.wool_type_id !== null &&
+      woolForm.wool_thickness_id !== null &&
+      woolForm.wool_color_id !== null &&
+      woolForm.wool_price !== null &&
+      woolForm.wool_stock !== null &&
+      woolForm.wool_ideal_stock !== null
+    );
+  };
+
+  const [isTypeInvalid, setIsTypeInvalid] = useState(false);
+  const [isColorInvalid, setIsColorInvalid] = useState(false);
+  const [isThicknessInvalid, setIsThicknessInvalid] = useState(false);
+  const [isPriceInvalid, setIsPriceInvalid] = useState(false);
+  const [isStockInvalid, setIsStockInvalid] = useState(false);
+  const [isIdealStockInvalid, setIsIdealStockInvalid] = useState(false);
 
   return (
     <>
@@ -150,7 +208,7 @@ export const WoolModal = (props: {
               <ModalBody>
                 <Autocomplete
                   label="Tipo de lana"
-                  items={woolType}
+                  defaultItems={woolType}
                   onSelectionChange={(e: Key) => {
                     setWoolForm({
                       ...woolForm,
@@ -158,6 +216,8 @@ export const WoolModal = (props: {
                     });
                   }}
                   className="dark text-black"
+                  isInvalid={isTypeInvalid}
+                  variant={isTypeInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_type_id.toString()}
                 >
                   {(item: WoolType) => (
@@ -172,7 +232,7 @@ export const WoolModal = (props: {
 
                 <Autocomplete
                   label="Grosor de lana"
-                  items={woolThickness}
+                  defaultItems={woolThickness}
                   onSelectionChange={(e: Key) => {
                     setWoolForm({
                       ...woolForm,
@@ -180,6 +240,8 @@ export const WoolModal = (props: {
                     });
                   }}
                   className="dark text-black"
+                  isInvalid={isThicknessInvalid}
+                  variant={isThicknessInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_thickness_id.toString()}
                 >
                   {(item: WoolThickness) => (
@@ -193,7 +255,7 @@ export const WoolModal = (props: {
                 </Autocomplete>
                 <Autocomplete
                   label="Color de lana"
-                  items={woolColor}
+                  defaultItems={woolColor}
                   onSelectionChange={(e: Key) => {
                     setWoolForm({
                       ...woolForm,
@@ -201,6 +263,8 @@ export const WoolModal = (props: {
                     });
                   }}
                   className="dark text-black"
+                  isInvalid={isColorInvalid}
+                  variant={isColorInvalid ? "bordered" : undefined}
                   defaultSelectedKey={wool?.wool_color_id.toString()}
                 >
                   {(item: WoolColor) => (
@@ -217,7 +281,9 @@ export const WoolModal = (props: {
                     type="number"
                     label="Precio"
                     placeholder="0.00"
-                    value={woolForm.wool_price.toString()}
+                    value={woolForm.wool_price?.toString()}
+                    isInvalid={isPriceInvalid}
+                    variant={isPriceInvalid ? "bordered" : undefined}
                     onValueChange={(e) => {
                       setWoolForm({
                         ...woolForm,
@@ -233,7 +299,9 @@ export const WoolModal = (props: {
                   <Input
                     label="Stock"
                     type="number"
-                    value={woolForm.wool_stock.toString()}
+                    value={woolForm.wool_stock?.toString()}
+                    isInvalid={isStockInvalid}
+                    variant={isStockInvalid ? "bordered" : undefined}
                     onValueChange={(e) => {
                       setWoolForm({
                         ...woolForm,
@@ -244,7 +312,9 @@ export const WoolModal = (props: {
                   <Input
                     label="Stock ideal"
                     type="number"
-                    value={woolForm.wool_ideal_stock.toString()}
+                    value={woolForm.wool_ideal_stock?.toString()}
+                    isInvalid={isIdealStockInvalid}
+                    variant={isIdealStockInvalid ? "bordered" : undefined}
                     onValueChange={(e) => {
                       setWoolForm({
                         ...woolForm,
@@ -260,12 +330,18 @@ export const WoolModal = (props: {
                     color="danger"
                     variant="light"
                     onPress={() => {
-                      confirmationModal.onOpen();
-                      /* handleDelete().then(() => {
-                        fetchStock(setStock);
-                        resetForm();
-                        onClose();
-                      }); */
+                      handleDelete().then((data) => {
+                        if (data) {
+                          fetchStock(setStock).then(() => {
+                            toast.success("Lana eliminada con éxito");
+                            resetInvalids();
+                            resetForm();
+                            onClose();
+                          });
+                        } else {
+                          toast.error("No se puede eliminar la lana");
+                        }
+                      });
                     }}
                   >
                     Eliminar lana
@@ -278,6 +354,8 @@ export const WoolModal = (props: {
                     variant="light"
                     onPress={() => {
                       resetForm();
+                      resetInvalids();
+                      setEditingWool(null);
                       onClose();
                     }}
                   >
@@ -286,18 +364,85 @@ export const WoolModal = (props: {
                   <Button
                     color="primary"
                     onPress={() => {
-                      if (wool) {
-                        handleEdit().then(() => {
-                          fetchStock(setStock);
-                          resetForm();
-                          onClose();
-                        });
+                      if (woolForm.wool_stock === null) {
+                        setIsStockInvalid(true);
+                        toast.error("El stock no puede estar vacío");
                       } else {
-                        handleCreate().then(() => {
-                          fetchStock(setStock);
-                          resetForm();
-                          onClose();
-                        });
+                        setIsStockInvalid(false);
+                      }
+
+                      if (woolForm.wool_ideal_stock === null) {
+                        setIsIdealStockInvalid(true);
+                        toast.error("El stock ideal no puede estar vacío");
+                      } else {
+                        setIsIdealStockInvalid(false);
+                      }
+
+                      if (woolForm.wool_price === null) {
+                        setIsPriceInvalid(true);
+                        toast.error("El precio no puede estar vacío");
+                      } else {
+                        setIsPriceInvalid(false);
+                      }
+
+                      if (woolForm.wool_color_id === null) {
+                        setIsColorInvalid(true);
+                        toast.error("El color no puede estar vacío");
+                      } else {
+                        setIsColorInvalid(false);
+                      }
+
+                      if (woolForm.wool_thickness_id === null) {
+                        setIsThicknessInvalid(true);
+                        toast.error("El grosor no puede estar vacío");
+                      } else {
+                        setIsThicknessInvalid(false);
+                      }
+
+                      if (woolForm.wool_type_id === null) {
+                        setIsTypeInvalid(true);
+                        toast.error("El tipo no puede estar vacío");
+                      } else {
+                        setIsTypeInvalid(false);
+                      }
+                      if (isFormComplete()) {
+                        if (wool) {
+                          handleEdit().then((data) => {
+                            if (data) {
+                              fetchStock(setStock).then(() => {
+                                toast.success("Lana editada con éxito");
+                                resetForm();
+                                setEditingWool(null);
+                                resetInvalids();
+                                onClose();
+                              });
+                            } else {
+                              setIsTypeInvalid(true);
+                              setIsColorInvalid(true);
+                              setIsThicknessInvalid(true);
+                              toast.error(
+                                "La lana ya existe, no se pueden actualizar los datos"
+                              );
+                            }
+                          });
+                        } else {
+                          handleCreate().then((data) => {
+                            if (data) {
+                              fetchStock(setStock).then(() => {
+                                toast.success("Lana creada con éxito");
+                                setEditingWool(null);
+                                resetInvalids();
+                                resetForm();
+                                onClose();
+                              });
+                            } else {
+                              setIsTypeInvalid(true);
+                              setIsColorInvalid(true);
+                              setIsThicknessInvalid(true);
+                              toast.error("La lana ya existe");
+                            }
+                          });
+                        }
                       }
                     }}
                   >
@@ -309,10 +454,6 @@ export const WoolModal = (props: {
           )}
         </ModalContent>
       </Modal>
-      <ConfirmationModal
-        isOpen={confirmationModal.isOpen}
-        onOpenChange={confirmationModal.onOpenChange}
-      />
     </>
   );
 };

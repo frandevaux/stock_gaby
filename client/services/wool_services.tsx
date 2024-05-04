@@ -84,7 +84,7 @@ export const deleteWool = async (wool_id: number) => {
       },
     });
 
-    const data = await res.json();
+    const data = await res.status;
     return data;
   } catch (error) {
     console.error(error);

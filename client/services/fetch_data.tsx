@@ -7,8 +7,9 @@ export const fetchWoolType = async (
 ) => {
   try {
     const res = await fetch(server_url + "/wool_type");
-    const data = await res.json();
-    setWoolType(data);
+    await res.json().then((data) => {
+      setWoolType(data);
+    });
   } catch (error) {
     console.error(error);
   }
@@ -19,8 +20,9 @@ export const fetchWoolThickness = async (
 ) => {
   try {
     const res = await fetch(server_url + "/wool_thickness");
-    const data = await res.json();
-    setWoolThickness(data);
+    await res.json().then((data) => {
+      setWoolThickness(data);
+    });
   } catch (error) {
     console.error(error);
   }
@@ -31,8 +33,9 @@ export const fetchWoolColor = async (
 ) => {
   try {
     const res = await fetch(server_url + "/wool_color");
-    const data = await res.json();
-    setWoolColor(data);
+    await res.json().then((data) => {
+      setWoolColor(data);
+    });
   } catch (error) {
     console.error(error);
   }
@@ -43,10 +46,10 @@ export const fetchStock = async (
 ) => {
   try {
     const res = await fetch(server_url + "/wool");
-    const data = await res.json();
-    setStock(data);
-    // return true after fetching data
-    return true;
+    await res.json().then((data) => {
+      console.log(data);
+      setStock(data);
+    });
   } catch (error) {
     console.error(error);
   }

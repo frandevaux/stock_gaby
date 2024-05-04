@@ -81,6 +81,21 @@ router.delete("/wool_type/:id", async (req, res) => {
     }
     res.json(deleteWoolType.rows[0]);
   } catch (err) {
+    return res.status(409).send("Wool type is used in a product");
+  }
+});
+
+// Verify if wool type exists
+
+router.get("/wool_type_verify", async (req, res) => {
+  try {
+    const { wool_type_name } = req.query;
+    const verifyWoolType = await pool.query(
+      "SELECT * FROM wool_type WHERE wool_type_name = $1",
+      [wool_type_name]
+    );
+    res.json(verifyWoolType);
+  } catch (err) {
     console.error(err.message);
   }
 });

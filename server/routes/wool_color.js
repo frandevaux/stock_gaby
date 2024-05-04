@@ -79,7 +79,22 @@ router.delete("/wool_color/:id", async (req, res) => {
     if (deleteWoolColor.rows.length === 0) {
       return res.status(404).send("Wool color not found");
     }
-    res.json(deleteWoolColor.rows[0]);
+    return res.status(200).json(deleteWoolColor.rows[0]);
+  } catch (err) {
+    return res.status(409).json("Wool color is used in a product");
+  }
+});
+
+// Verify if the wool color exists
+
+router.get("/wool_color_verify", async (req, res) => {
+  try {
+    const { wool_color_name } = req.query;
+    const verifyWoolColor = await pool.query(
+      "SELECT * FROM wool_color WHERE wool_color_name = $1",
+      [wool_color_name]
+    );
+    res.json(verifyWoolColor);
   } catch (err) {
     console.error(err.message);
   }

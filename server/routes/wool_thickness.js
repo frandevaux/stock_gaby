@@ -78,7 +78,23 @@ router.delete("/wool_thickness/:id", async (req, res) => {
     if (deleteWoolThickness.rowCount === 0) {
       return res.status(404).send("Wool thickness not found");
     }
-    return res.json(deleteWoolThickness.rows[0]);
+    return res.status(200).json(deleteWoolThickness.rows[0]);
+  } catch (err) {
+    return res.status(409).json("Wool thickness is used in a product");
+  }
+});
+
+// Verify if the wool thickness exists
+
+router.get("/wool_thickness_verify", async (req, res) => {
+  try {
+    const { wool_thickness_name } = req.query;
+    const verifyWoolThickness = await pool.query(
+      "SELECT * FROM wool_thickness WHERE wool_thickness_name = $1",
+      [wool_thickness_name]
+    );
+
+    res.json(verifyWoolThickness);
   } catch (err) {
     console.error(err.message);
   }

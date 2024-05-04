@@ -109,7 +109,7 @@ router.delete("/wool/:id", async (req, res) => {
     if (deleteWool.rows.length === 0) {
       return res.status(404).send("Wool not found");
     }
-    res.json(deleteWool.rows[0]);
+    res.status(200).json(deleteWool.rows[0]);
   } catch (err) {
     console.error(err.message);
   }
